@@ -3,39 +3,56 @@
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Simon — a classic memory game. Watch the sequence, repeat it, level up.">
+  <meta name="theme-color" content="#04122a">
+  <meta property="og:title" content="Simon Memory Game">
+  <meta property="og:description" content="Test your memory. Watch the colors flash, then click them in the same order.">
+  <meta property="og:type" content="website">
   <title>Simon</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50,5 A45,45 0 0,1 95,50 L50,50 Z' fill='%23ff5252'/%3E%3Cpath d='M95,50 A45,45 0 0,1 50,95 L50,50 Z' fill='%2329b6f6'/%3E%3Cpath d='M50,95 A45,45 0 0,1 5,50 L50,50 Z' fill='%23ffd600'/%3E%3Cpath d='M5,50 A45,45 0 0,1 50,5 L50,50 Z' fill='%2300d26a'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
 </head>
 
 <body>
-  <h1 id="level-title">Press A Key to Start</h1>
-  <div class="container">
-    <div class="row">
+  <main class="stage">
+    <h1 id="level-title">Simon</h1>
 
-      <div type="button" id="green" class="btn green">
-
+    <div class="scoreboard">
+      <div class="score-card">
+        <span class="score-label">Level</span>
+        <span class="score-value" id="level-value">—</span>
       </div>
-
-      <div type="button" id="red" class="btn red">
-
+      <div class="score-card">
+        <span class="score-label">Best</span>
+        <span class="score-value" id="best-value">0</span>
       </div>
     </div>
 
-    <div class="row">
-
-      <div type="button" id="yellow" class="btn yellow">
-
+    <div class="container">
+      <div class="row">
+        <button id="green" class="btn green" aria-label="Green"></button>
+        <button id="red" class="btn red" aria-label="Red"></button>
       </div>
-      <div type="button" id="blue" class="btn blue">
-
+      <div class="row">
+        <button id="yellow" class="btn yellow" aria-label="Yellow"></button>
+        <button id="blue" class="btn blue" aria-label="Blue"></button>
       </div>
-
     </div>
 
+    <button id="start-btn" class="start-btn">Start</button>
+  </main>
+
+  <div id="game-over-overlay" class="game-over-overlay" hidden aria-hidden="true">
+    <div class="game-over-text">GAME OVER</div>
+    <div class="game-over-stats">
+      <div class="stat"><span class="stat-label">Level</span><span class="stat-value" id="final-level">0</span></div>
+      <div class="stat"><span class="stat-label">Best</span><span class="stat-value" id="final-best">0</span></div>
+    </div>
   </div>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="game.js"></script>
+
+  <script src="game.js"></script>
 </body>
 
 </html>

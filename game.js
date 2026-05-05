@@ -1,88 +1,153 @@
-$(document).ready(function () {
-    var clicks = [];
-    let gen = []; // Stores the generated sequence (moved outside keydown)
-    let con = 1;
-    let state = false;
-    let color = ["green", "red", "yellow", "blue"];
+(function () {
+  const colors = ["green", "red", "yellow", "blue"];
+  const tones = { green: 329.63, red: 261.63, yellow: 220.00, blue: 164.81 };
+  const STORAGE_KEY = "simon-best-score";
 
-    $(document).keydown(function () {
-        if (!state) {
-            $("h1").text("Level " + con);
-            state = true;
-            generateSequence(); // Start game when key is pressed
-        }
+  const titleEl = document.getElementById("level-title");
+  const levelValueEl = document.getElementById("level-value");
+  const bestValueEl = document.getElementById("best-value");
+  const startBtn = document.getElementById("start-btn");
+  const buttons = document.querySelectorAll(".btn");
+  const overlay = document.getElementById("game-over-overlay");
+  const finalLevelEl = document.getElementById("final-level");
+  const finalBestEl = document.getElementById("final-best");
+
+  let sequence = [];
+  let userPattern = [];
+  let level = 0;
+  let playing = false;
+  let playerTurn = false;
+  let audioCtx = null;
+
+  let best = parseInt(localStorage.getItem(STORAGE_KEY) || "0", 10);
+  bestValueEl.textContent = best;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  }
+
+  function playTone(c) {
+    ensureAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = tones[c];
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.4);
+  }
+
+  function flash(color) {
+    const btn = document.getElementById(color);
+    btn.classList.add("pressed");
+    setTimeout(() => btn.classList.remove("pressed"), 180);
+  }
+
+  function flashWithSound(color) {
+    flash(color);
+    playTone(color);
+  }
+
+  // Sequence speeds up as level rises, capped at 220ms.
+  function stepInterval() {
+    return Math.max(220, 620 - level * 25);
+  }
+
+  function nextRound() {
+    level++;
+    levelValueEl.textContent = level;
+    titleEl.textContent = "Level " + level;
+    sequence.push(colors[Math.floor(Math.random() * 4)]);
+    userPattern = [];
+    playSequence();
+  }
+
+  function playSequence() {
+    playerTurn = false;
+    let i = 0;
+    const interval = stepInterval();
+    const step = () => {
+      if (i >= sequence.length) {
+        playerTurn = true;
+        return;
+      }
+      flashWithSound(sequence[i]);
+      i++;
+      setTimeout(step, interval);
+    };
+    setTimeout(step, 500);
+  }
+
+  function checkAnswer() {
+    const i = userPattern.length - 1;
+    if (userPattern[i] !== sequence[i]) {
+      gameOver();
+      return;
+    }
+    if (userPattern.length === sequence.length) {
+      setTimeout(nextRound, 800);
+    }
+  }
+
+  function gameOver() {
+    document.body.classList.add("game-over");
+    setTimeout(() => document.body.classList.remove("game-over"), 600);
+
+    const reached = level;
+    if (reached > best) {
+      best = reached;
+      localStorage.setItem(STORAGE_KEY, String(best));
+      bestValueEl.textContent = best;
+      titleEl.textContent = "New Best · " + reached;
+    } else {
+      titleEl.textContent = "Game Over · " + reached;
+    }
+
+    finalLevelEl.textContent = reached;
+    finalBestEl.textContent = best;
+    overlay.hidden = false;
+
+    playing = false;
+    playerTurn = false;
+    startBtn.textContent = "Play Again";
+    startBtn.classList.add("play-again");
+    setTimeout(() => { startBtn.hidden = false; }, 650);
+  }
+
+  function startGame() {
+    if (playing) return;
+    ensureAudio();
+    sequence = [];
+    userPattern = [];
+    level = 0;
+    levelValueEl.textContent = "—";
+    titleEl.textContent = "Simon";
+    startBtn.hidden = true;
+    startBtn.classList.remove("play-again");
+    overlay.hidden = true;
+    playing = true;
+    nextRound();
+  }
+
+  startBtn.addEventListener("click", startGame);
+
+  document.addEventListener("keydown", () => {
+    if (!playing && !startBtn.hidden) startGame();
+  });
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (!playing || !playerTurn) return;
+      const color = btn.id;
+      userPattern.push(color);
+      flashWithSound(color);
+      checkAnswer();
     });
-
-    // Function to generate a new step in the sequence
-    function generateSequence() {
-        let num = Math.floor(Math.random() * 4);
-        let autoclick = color[num];
-
-        gen.push(autoclick); // Add to sequence
-        console.log("Generated Sequence:", gen); // Debugging
-
-        setTimeout(() => {
-            animateClick(autoclick); // Animate button
-            switchState(autoclick); // Play sound
-        }, 500);
-    }
-
-    // Function to check the player's input
-    function checkanswer() {
-        let i = clicks.length - 1; // Compare the last input
-
-        if (clicks[i] === gen[i]) {
-            console.log("Success");
-
-            if (clicks.length === gen.length) {
-                setTimeout(() => {
-                    clicks = []; // Reset for the next round
-                    con++; // Increase level
-                    $("h1").text("Level " + con);
-                    generateSequence(); // Generate new step
-                }, 1000);
-            }
-        } else {
-            console.log("Wrong! Game Over.");
-            resetGame();
-        }
-    }
-
-    // Function to handle player clicks
-    $(".btn").click(function () {
-        if (!state) return; // Ignore clicks before game starts
-
-        let click = $(this).attr("id");
-        clicks.push(click);
-        console.log("Player Clicks:", clicks);
-
-        animateClick(click);
-        switchState(click);
-        checkanswer();
-    });
-
-    // Function to reset the game
-    function resetGame() {
-        console.log("Game Over. Restarting...");
-        $("h1").text("Game Over! Press Any Key to Restart");
-        gen = [];
-        clicks = [];
-        con = 1;
-        state = false;
-    }
-
-    // Function to play sound
-    function switchState(click) {
-        let audio = new Audio(`sounds/${click}.mp3`);
-        audio.play();
-    }
-
-    // Function to animate button click
-    function animateClick(event) {
-        let $btn = $("#" + event);
-        $btn.addClass("pressed");
-        setTimeout(() => {
-            $btn.removeClass("pressed");
-        }, 100);
-    }
-});
+  });
+})();
