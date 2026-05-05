@@ -4,7 +4,8 @@ Browser implementation of the classic Simon memory game. Watch the sequence, rep
 
 Live demo:https://mouleesh-user.github.io/simon-game/
 
-![Simon gameplay](screenshot.png)
+![Uploading image.png…]()
+
 
 ## Play
 
