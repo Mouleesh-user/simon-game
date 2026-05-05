@@ -2,7 +2,7 @@
 
 Browser implementation of the classic Simon memory game. Watch the sequence, repeat it, level up. The sequence grows by one color each round and replays from the start every time, getting faster as you climb.
 
-**Live demo:** _add GitHub Pages URL here once deployed_
+Live demo:https://mouleesh-user.github.io/simon-game/
 
 ![Simon gameplay](screenshot.png)
 
